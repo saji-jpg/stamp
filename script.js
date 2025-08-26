@@ -144,8 +144,6 @@ function onScanSuccess(decodedText, decodedResult) {
     // 既にスキャン済みか確認
     if (currentScannedCodes.includes(decodedText)) {
         showMessageBox("このスタンプは既に獲得済みです！");
-        // ここにトップページに戻る処理を追加
-        showPage('home-page');
         return;
     }
 
@@ -173,3 +171,4 @@ function onScanFailure(error) {
 document.addEventListener('DOMContentLoaded', () => {
     updateStampGrid();
 });
+
