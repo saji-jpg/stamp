@@ -1,0 +1,164 @@
+// ページの状態を管理する変数
+let html5QrcodeScanner = null;
+let currentScannedCodes = JSON.parse(localStorage.getItem('scannedCodes')) || [];
+
+// QRコードの数を定義
+const totalQRCodes = 5;
+
+// ページを表示/非表示にする関数
+function showPage(pageId) {
+    document.querySelectorAll('.page').forEach(page => {
+        page.classList.remove('active');
+    });
+    document.getElementById(pageId).classList.add('active');
+
+    // QRページが表示されたらスキャナーを開始
+    if (pageId === 'qr-page') {
+        startQrScanner();
+    } else {
+        // 他のページに移動したらスキャナーを停止
+        if (html5QrcodeScanner && html5QrcodeScanner.getState() !== 2) { // 2は停止状態を示す
+            html5QrcodeScanner.stop().then(() => {
+                console.log("QR code scanner stopped.");
+            }).catch(err => {
+                console.error("Failed to stop QR code scanner:", err);
+            });
+        }
+    }
+    updateStampGrid();
+}
+
+// メッセージボックスを表示する関数
+function showMessageBox(message) {
+    document.getElementById('message-content').innerHTML = message;
+    document.querySelector('.message-box-overlay').style.display = 'block';
+    document.getElementById('message-box').style.display = 'flex';
+}
+
+// メッセージボックスを閉じる関数
+function closeMessageBox() {
+    document.querySelector('.message-box-overlay').style.display = 'none';
+    document.getElementById('message-box').style.display = 'none';
+}
+
+// スタンプの状態を更新する関数
+function updateStampGrid() {
+    const stampGridContainer = document.querySelector('#stamp-grid-container');
+    stampGridContainer.innerHTML = '';
+    const stamps = ['スタンプ1', 'スタンプ2', 'スタンプ3', 'スタンプ4', 'スタンプ5'];
+    
+    // 1行目の要素を作成
+    const firstRow = document.createElement('div');
+    firstRow.className = 'stamp-grid-row-top';
+
+    // 1番目と2番目のスタンプを追加
+    const stamp1 = createStampItem(stamps[0], 1);
+    const stamp2 = createStampItem(stamps[1], 2);
+    firstRow.appendChild(stamp1);
+    firstRow.appendChild(stamp2);
+
+    // 2行目の要素を作成
+    const secondRow = document.createElement('div');
+    secondRow.className = 'stamp-grid-row-bottom';
+    
+    // 3番目、4番目、5番目のスタンプを追加
+    const stamp3 = createStampItem(stamps[2], 3);
+    const stamp4 = createStampItem(stamps[3], 4);
+    const stamp5 = createStampItem(stamps[4], 5);
+    secondRow.appendChild(stamp3);
+    secondRow.appendChild(stamp4);
+    secondRow.appendChild(stamp5);
+
+    // コンテナに各行を追加
+    stampGridContainer.appendChild(firstRow);
+    stampGridContainer.appendChild(secondRow);
+}
+
+// スタンプアイテムを生成するヘルパー関数
+function createStampItem(stampName, stampNumber) {
+    const isStamped = currentScannedCodes.includes(`stamp-${stampNumber}`);
+    const stampItem = document.createElement('div');
+    stampItem.className = 'stamp-item';
+    stampItem.innerHTML = `
+        <div class="stamp-status ${isStamped ? 'stamped' : ''}">
+            ${isStamped ? '<i class="fas fa-check"></i>' : (stampNumber)}
+        </div>
+        <div class="stamp-name">${stampName}</div>
+    `;
+    return stampItem;
+}
+
+// QRコードスキャナーを開始する関数
+function startQrScanner() {
+    // スキャナーが既に存在し、停止状態の場合は再開
+    if (html5QrcodeScanner) {
+        html5QrcodeScanner.start({ facingMode: "environment" }, {
+            fps: 10,
+            qrbox: { width: 250, height: 250 }
+        }, onScanSuccess, onScanFailure);
+        return;
+    }
+
+    html5QrcodeScanner = new Html5Qrcode("reader");
+
+    // カメラが利用可能か確認し、スキャナーを開始
+    Html5Qrcode.getCameras().then(devices => {
+        if (devices && devices.length) {
+            const cameraId = devices[0].id;
+            html5QrcodeScanner.start(
+                { facingMode: "environment" },
+                {
+                    fps: 10,
+                    qrbox: { width: 250, height: 250 }
+                },
+                onScanSuccess,
+                onScanFailure
+            );
+        }
+    }).catch(err => {
+        console.error("Camera access failed:", err);
+        showMessageBox("カメラへのアクセスに失敗しました。カメラの許可設定を確認してください。");
+    });
+}
+
+// QRコードの読み取りに成功したときの処理
+function onScanSuccess(decodedText, decodedResult) {
+    console.log(`Code matched = ${decodedText}`, decodedResult);
+    
+    // スタンプコードの形式を確認 (例: "stamp-1", "stamp-2")
+    const regex = /^stamp-[1-5]$/;
+    if (!regex.test(decodedText)) {
+        showMessageBox("これはスタンプラリーのQRコードではありません。");
+        return;
+    }
+
+    // 既にスキャン済みか確認
+    if (currentScannedCodes.includes(decodedText)) {
+        showMessageBox("このスタンプは既に獲得済みです！");
+        return;
+    }
+
+    // スキャンしたコードを追加して保存
+    currentScannedCodes.push(decodedText);
+    localStorage.setItem('scannedCodes', JSON.stringify(currentScannedCodes));
+
+    // スタンプの総数をチェック
+    if (currentScannedCodes.length === totalQRCodes) {
+        showMessageBox("おめでとうございます！すべてのスタンプを集めました！🎉");
+    } else {
+        showMessageBox(`スタンプをゲットしました！\n残り${totalQRCodes - currentScannedCodes.length}個です。`);
+    }
+
+    // トップページに戻る
+    showPage('home-page');
+}
+
+// QRコードの読み取りに失敗したときの処理
+function onScanFailure(error) {
+    // console.warn(`Code scan error = ${error}`);
+}
+
+// ページロード時にスタンプの状態を更新
+document.addEventListener('DOMContentLoaded', () => {
+    updateStampGrid();
+});

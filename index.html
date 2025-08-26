@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>デジタルスタンプラリー</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Inter Font -->
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&display=swap">
+    <!-- 外部スタイルシートを読み込み -->
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body class="bg-[#fce4ec]">
+
+<div class="container">
+    <!-- トップページ -->
+    <div id="home-page" class="page active">
+        <h1 class="text-4xl font-bold text-[#d63384] mb-8">💖 デジタルスタンプラリー 💖</h1>
+        <p class="text-lg text-[#d63384] mb-8">校舎をまわってスタンプをあつめよう！</p>
+        <button class="btn" onclick="showPage('qr-page')">
+            <i class="fas fa-qrcode mr-2"></i> QRコード読み取り
+        </button>
+        <button class="btn" onclick="showPage('map-page')">
+            <i class="fas fa-map-marked-alt mr-2"></i> 校舎マップ
+        </button>
+
+        <div id="stamp-grid-container" class="stamp-grid-container">
+            <!-- スタンプの状態を表示する部分 -->
+        </div>
+    </div>
+
+    <!-- QRコード読み取りページ -->
+    <div id="qr-page" class="page">
+        <h2 class="text-3xl font-bold text-[#d63384] mb-4">QRコードを読み取ろう！</h2>
+        <div id="reader" style="width: 100%; max-width: 400px; border-radius: 1rem;"></div>
+        <button class="btn mt-8" onclick="showPage('home-page')">
+            <i class="fas fa-home mr-2"></i> トップページに戻る
+        </button>
+    </div>
+
+    <!-- 校舎マップページ -->
+    <div id="map-page" class="page">
+        <h2 class="text-3xl font-bold text-[#d63384] mb-4">校舎マップ</h2>
+        <img id="kosya-map" src="kosya.jpg" alt="校舎マップ">
+        <button class="btn mt-8" onclick="showPage('home-page')">
+            <i class="fas fa-home mr-2"></i> トップページに戻る
+        </button>
+    </div>
+</div>
+
+<!-- メッセージボックス -->
+<div class="message-box-overlay" onclick="closeMessageBox()"></div>
+<div id="message-box" class="message-box">
+    <div id="message-content"></div>
+    <button class="btn mt-4" onclick="closeMessageBox()">OK</button>
+</div>
+
+<!-- html5-qrcodeライブラリ -->
+<script src="https://unpkg.com/html5-qrcode"></script>
+<!-- Font Awesome Icons -->
+<script src="https://kit.fontawesome.com/a076d05399.js" crossorigin="anonymous"></script>
+
+<!-- 外部JavaScriptを読み込み -->
+<script src="script.js"></script>
+</body>
+</html>
