@@ -147,6 +147,21 @@ function onScanSuccess(decodedText, decodedResult) {
 
     console.log(`Code matched = ${decodedText}`, decodedResult);
     
+    // スキャンしたコードがスタンプラリーの形式か確認
+    const regex = /^stamp-[1-5]$/;
+    if (!regex.test(decodedText)) {
+        showMessageBox("これはスタンプラリーのQRコードではありません。");
+        showPage('home-page');
+        return;
+    }
+
+    // 既にスキャン済みか確認
+    if (currentScannedCodes.includes(decodedText)) {
+        showMessageBox("このスタンプは既に獲得済みです！");
+        showPage('home-page');
+        return;
+    }
+
     // スキャンしたコードを追加して保存
     currentScannedCodes.push(decodedText);
     localStorage.setItem('scannedCodes', JSON.stringify(currentScannedCodes));
