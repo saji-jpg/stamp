@@ -1,6 +1,7 @@
 // ページの状態を管理する変数
 let html5QrcodeScanner = null;
 let currentScannedCodes = JSON.parse(localStorage.getItem('scannedCodes')) || [];
+let isMessageBoxVisible = false; // メッセージボックスの表示状態を管理するフラグ
 
 // QRコードの数を定義
 const totalQRCodes = 5;
@@ -30,6 +31,12 @@ function showPage(pageId) {
 
 // メッセージボックスを表示する関数
 function showMessageBox(message) {
+    // メッセージボックスが表示されている場合は、新しいメッセージを表示しない
+    if (isMessageBoxVisible) {
+        return;
+    }
+    isMessageBoxVisible = true; // フラグを立てる
+
     document.getElementById('message-content').innerHTML = message;
     document.querySelector('.message-box-overlay').style.display = 'block';
     document.getElementById('message-box').style.display = 'flex';
@@ -41,6 +48,7 @@ function showMessageBox(message) {
 
 // メッセージボックスを閉じる関数
 function closeMessageBox() {
+    isMessageBoxVisible = false; // フラグを元に戻す
     document.querySelector('.message-box-overlay').style.display = 'none';
     document.getElementById('message-box').style.display = 'none';
     // メッセージボックスが閉じたらQRコードスキャナーを再開
@@ -132,6 +140,11 @@ function startQrScanner() {
 
 // QRコードの読み取りに成功したときの処理
 function onScanSuccess(decodedText, decodedResult) {
+    // メッセージボックスが表示されている場合は、処理を中断
+    if (isMessageBoxVisible) {
+        return;
+    }
+
     console.log(`Code matched = ${decodedText}`, decodedResult);
     
     // スタンプコードの形式を確認 (例: "stamp-1", "stamp-2")
@@ -144,6 +157,8 @@ function onScanSuccess(decodedText, decodedResult) {
     // 既にスキャン済みか確認
     if (currentScannedCodes.includes(decodedText)) {
         showMessageBox("このスタンプは既に獲得済みです！");
+        // メッセージ表示後にトップページに戻る
+        showPage('home-page');
         return;
     }
 
@@ -171,4 +186,3 @@ function onScanFailure(error) {
 document.addEventListener('DOMContentLoaded', () => {
     updateStampGrid();
 });
-
