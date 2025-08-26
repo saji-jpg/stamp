@@ -33,12 +33,20 @@ function showMessageBox(message) {
     document.getElementById('message-content').innerHTML = message;
     document.querySelector('.message-box-overlay').style.display = 'block';
     document.getElementById('message-box').style.display = 'flex';
+    // メッセージボックスが表示されたらQRコードスキャナーを一時停止
+    if (html5QrcodeScanner && html5QrcodeScanner.getState() === 1) { // 1はスキャン中
+        html5QrcodeScanner.pause();
+    }
 }
 
 // メッセージボックスを閉じる関数
 function closeMessageBox() {
     document.querySelector('.message-box-overlay').style.display = 'none';
     document.getElementById('message-box').style.display = 'none';
+    // メッセージボックスが閉じたらQRコードスキャナーを再開
+    if (html5QrcodeScanner && html5QrcodeScanner.getState() === 3) { // 3は一時停止中
+        html5QrcodeScanner.resume();
+    }
 }
 
 // スタンプの状態を更新する関数
