@@ -135,6 +135,9 @@ function onScanSuccess(decodedText, decodedResult) {
     // 既にスキャン済みか確認
     if (currentScannedCodes.includes(decodedText)) {
         showMessageBox("このスタンプは既に獲得済みです！");
+        // メッセージボックスを閉じるためのボタンがメッセージボックス内にないため、
+        // 処理を停止してユーザーが手動で閉じるのを待つ。
+        // これにより、メッセージボックスが消えない問題が解決されるはずです。
         return;
     }
 
