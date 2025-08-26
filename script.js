@@ -6,7 +6,10 @@ let isMessageBoxVisible = false; // メッセージボックスの表示状態�
 // QRコードの数を定義
 const totalQRCodes = 5;
 
-// ページを表示/非表示にする関数
+/**
+ * 指定されたページを表示し、他のページを非表示にする関数。
+ * @param {string} pageId - 表示するページのID。
+ */
 function showPage(pageId) {
     document.querySelectorAll('.page').forEach(page => {
         page.classList.remove('active');
@@ -29,7 +32,10 @@ function showPage(pageId) {
     updateStampGrid();
 }
 
-// メッセージボックスを表示する関数
+/**
+ * メッセージボックスを表示する関数。
+ * @param {string} message - 表示するメッセージ。
+ */
 function showMessageBox(message) {
     // メッセージボックスが表示されている場合は、新しいメッセージを表示しない
     if (isMessageBoxVisible) {
@@ -90,7 +96,12 @@ function updateStampGrid() {
     stampGridContainer.appendChild(secondRow);
 }
 
-// スタンプアイテムを生成するヘルパー関数
+/**
+ * スタンプアイテムを生成するヘルパー関数。
+ * @param {string} stampName - スタンプの名前。
+ * @param {number} stampNumber - スタンプの番号。
+ * @returns {HTMLElement} - 生成されたスタンプのDOM要素。
+ */
 function createStampItem(stampName, stampNumber) {
     const isStamped = currentScannedCodes.includes(`stamp-${stampNumber}`);
     const stampItem = document.createElement('div');
@@ -138,7 +149,11 @@ function startQrScanner() {
     });
 }
 
-// QRコードの読み取りに成功したときの処理
+/**
+ * QRコードの読み取りに成功したときの処理。
+ * @param {string} decodedText - 読み取られたQRコードのテキスト。
+ * @param {object} decodedResult - 読み取り結果の詳細情報。
+ */
 function onScanSuccess(decodedText, decodedResult) {
     // メッセージボックスが表示されている場合は、処理を中断
     if (isMessageBoxVisible) {
@@ -150,13 +165,13 @@ function onScanSuccess(decodedText, decodedResult) {
     // スキャンしたコードがスタンプラリーの形式か確認
     const regex = /^stamp-[1-5]$/;
     if (!regex.test(decodedText)) {
-        // メッセージを表示せず、何も処理しない
+        // 形式が一致しない場合は処理しない
         return;
     }
 
     // 既にスキャン済みか確認
     if (currentScannedCodes.includes(decodedText)) {
-        // メッセージを表示せず、何も処理しない
+        // 既に取得済みの場合は処理しない
         return;
     }
 
@@ -166,16 +181,20 @@ function onScanSuccess(decodedText, decodedResult) {
 
     // スタンプの総数をチェック
     if (currentScannedCodes.length === totalQRCodes) {
-        showMessageBox("おめでとうございます！すべてのスタンプを集めました！🎉");
+        // すべてのスタンプを集めたらおめでとうページに移動
+        showPage('congratulations-page');
     } else {
+        // スタンプをゲットしたことをメッセージで通知
         showMessageBox(`スタンプをゲットしました！\n残り${totalQRCodes - currentScannedCodes.length}個です。`);
+        // トップページに戻る
+        showPage('home-page');
     }
-
-    // トップページに戻る
-    showPage('home-page');
 }
 
-// QRコードの読み取りに失敗したときの処理
+/**
+ * QRコードの読み取りに失敗したときの処理。
+ * @param {string} error - 失敗した理由を示すエラーメッセージ。
+ */
 function onScanFailure(error) {
     // console.warn(`Code scan error = ${error}`);
 }
