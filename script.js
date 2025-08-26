@@ -79,9 +79,10 @@ function createStampItem(stampName, stampNumber) {
     const isStamped = currentScannedCodes.includes(`stamp-${stampNumber}`);
     const stampItem = document.createElement('div');
     stampItem.className = 'stamp-item';
+    // スタンプが押されたらリボンの絵文字を表示
     stampItem.innerHTML = `
         <div class="stamp-status ${isStamped ? 'stamped' : ''}">
-            ${isStamped ? '<i class="fas fa-check"></i>' : (stampNumber)}
+            ${isStamped ? '🎀' : (stampNumber)}
         </div>
         <div class="stamp-name">${stampName}</div>
     `;
