@@ -1,6 +1,6 @@
 body {
     font-family: 'Inter', sans-serif;
-    background-color: #fce4ec; /* 明るいピンク */
+    background-color: #fce4ec; /*明るいピンク */
 }
 .container {
     max-width: 600px;
@@ -24,7 +24,7 @@ body {
     align-items: center;
 }
 .btn {
-    background-color: #ff69b4; /* ホットピンク */
+    background-color: #ff69b4; /*ホットピンク */
     color: #fff;
     padding: 1rem 2rem;
     border-radius: 9999px;
@@ -34,6 +34,9 @@ body {
     cursor: pointer;
     margin-bottom: 1rem;
     text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
 }
 .btn:hover {
     transform: translateY(-2px);
@@ -55,7 +58,7 @@ body {
 .stamp-grid-row-top,
 .stamp-grid-row-bottom {
     display: flex;
-    justify-content: center; /* 1行目と2行目両方を中央揃え */
+    justify-content: center;
     gap: 1rem;
 }
 .stamp-item {
@@ -66,7 +69,7 @@ body {
 .stamp-status {
     width: 80px;
     height: 80px;
-    background-color: #ffc0cb; /* ライトピンク */
+    background-color: #ffc0cb; /*ライトピンク */
     border: 3px dashed #ff69b4;
     border-radius: 50%;
     display: flex;
