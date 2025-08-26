@@ -10,6 +10,27 @@
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&display=swap">
     <!-- 外部CSSを読み込み -->
     <link rel="stylesheet" href="styles.css">
+    <style>
+        /* Clampを使用して、フォントサイズを画面幅に応じて調整します */
+        h1 {
+            font-size: clamp(2rem, 8vw, 2.5rem);
+        }
+        h2 {
+            font-size: clamp(1.5rem, 6vw, 2rem);
+        }
+        p {
+            font-size: clamp(1rem, 4vw, 1.25rem);
+        }
+        .text-lg {
+            font-size: clamp(1rem, 4vw, 1.125rem);
+        }
+        .text-2xl {
+            font-size: clamp(1.5rem, 6vw, 1.5rem);
+        }
+        .text-4xl {
+            font-size: clamp(2rem, 8vw, 2.25rem);
+        }
+    </style>
 </head>
 <body class="bg-[#fce4ec]">
 
@@ -50,9 +71,9 @@
     
     <!-- おめでとうページ -->
     <div id="congratulations-page" class="page">
-        <h2 class="text-4xl font-bold text-[#d63384] mb-8 text-center">🎉おめでとうございます 🎉</h2>
+        <h2 class="text-4xl font-bold text-[#d63384] mb-8 text-center">🎉おめでとうございます！ 🎉</h2>
         <p class="text-2xl text-[#d63384] mb-8 text-center">すべてのスタンプを<br>コンプリートしました！</p>
-        <p class="text-2xl text-[#d63384] text-center">この画面を1Fの受付係に見せてください</p>
+        <p class="text-lg text-[#d63384] text-center">この画面を1Fの受付係に見せてください</p>
     </div>
 </div>
 
@@ -71,4 +92,3 @@
 <script src="script.js"></script>
 </body>
 </html>
-
