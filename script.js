@@ -150,15 +150,13 @@ function onScanSuccess(decodedText, decodedResult) {
     // スキャンしたコードがスタンプラリーの形式か確認
     const regex = /^stamp-[1-5]$/;
     if (!regex.test(decodedText)) {
-        showMessageBox("これはスタンプラリーのQRコードではありません。");
-        showPage('home-page');
+        // メッセージを表示せず、何も処理しない
         return;
     }
 
     // 既にスキャン済みか確認
     if (currentScannedCodes.includes(decodedText)) {
-        showMessageBox("このスタンプは既に獲得済みです！");
-        showPage('home-page');
+        // メッセージを表示せず、何も処理しない
         return;
     }
 
