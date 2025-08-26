@@ -8,7 +8,7 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- Inter Font -->
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&display=swap">
-    <!-- 外部スタイルシートを読み込み -->
+    <!-- 外部CSSを読み込み -->
     <link rel="stylesheet" href="styles.css">
 </head>
 <body class="bg-[#fce4ec]">
@@ -42,8 +42,17 @@
     <!-- 校舎マップページ -->
     <div id="map-page" class="page">
         <h2 class="text-3xl font-bold text-[#d63384] mb-4">校舎マップ</h2>
-        <img id="kosya-map" src="kosya.jpg" alt="校舎マップ">
+        <img id="kosya-map" src="https://placehold.co/600x400/ffc0cb/ff69b4?text=校舎マップ" alt="校舎マップ">
         <button class="btn mt-8" onclick="showPage('home-page')">
+            <i class="fas fa-home mr-2"></i> トップページに戻る
+        </button>
+    </div>
+    
+    <!-- おめでとうページ -->
+    <div id="congratulations-page" class="page">
+        <h2 class="text-4xl font-bold text-[#d63384] mb-8">おめでとうございます！</h2>
+        <p class="text-2xl text-[#d63384] mb-8">すべてのスタンプを<br>コンプリートしました！ 🎉</p>
+        <button class="btn" onclick="showPage('home-page')">
             <i class="fas fa-home mr-2"></i> トップページに戻る
         </button>
     </div>
@@ -60,9 +69,7 @@
 <script src="https://unpkg.com/html5-qrcode"></script>
 <!-- Font Awesome Icons -->
 <script src="https://kit.fontawesome.com/a076d05399.js" crossorigin="anonymous"></script>
-
 <!-- 外部JavaScriptを読み込み -->
 <script src="script.js"></script>
 </body>
 </html>
-
