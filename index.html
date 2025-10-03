@@ -4,12 +4,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>デジタルスタンプラリー</title>
-    <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Inter Font -->
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&display=swap">
-    <!-- 外部CSSを読み込み -->
-    <link rel="stylesheet" href="styles.css">
+    
     <style>
         /* Clampを使用して、フォントサイズを画面幅に応じて調整します */
         h1 {
@@ -30,28 +27,199 @@
         .text-4xl {
             font-size: clamp(2rem, 8vw, 2.25rem);
         }
+        /* 外部CSS (styles.css) の内容 */
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #fce4ec; /*明るいピンク */
+        }
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 2rem;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+        }
+        .page {
+            display: none;
+            width: 100%;
+            text-align: center;
+        }
+        .page.active {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+        }
+        .btn {
+            background-color: #ff69b4; /*ホットピンク */
+            color: #fff;
+            padding: 1rem 2rem;
+            border-radius: 9999px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            font-weight: bold;
+            transition: transform 0.2s, box-shadow 0.2s;
+            cursor: pointer;
+            margin-bottom: 1rem;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 8px rgba(0, 0, 0, 0.15);
+        }
+        #kosya-map {
+            max-width: 100%;
+            height: auto;
+            border-radius: 1rem;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        .stamp-grid-container {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+            margin-top: 1rem;
+            width: 100%;
+        }
+        .stamp-grid-row-top,
+        .stamp-grid-row-bottom {
+            display: flex;
+            justify-content: center;
+            gap: 1rem;
+        }
+        .stamp-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        .stamp-status {
+            width: 80px;
+            height: 80px;
+            background-color: #ffc0cb; /*ライトピンク */
+            border: 3px dashed #ff69b4;
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-weight: bold;
+            color: #ff69b4;
+            font-size: 1.5rem;
+        }
+        .stamp-status.stamped {
+            background-color: #ff69b4;
+            border-style: solid;
+            color: #fff;
+            font-size: 2rem;
+        }
+        .stamp-name {
+            margin-top: 0.5rem;
+            font-size: 0.875rem;
+            color: #d63384;
+            font-weight: 500;
+        }
+        .message-box {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background-color: #fff;
+            padding: 2rem;
+            border-radius: 1rem;
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
+            z-index: 100;
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+        }
+        .message-box-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            z-index: 99;
+            display: none;
+        }
+        /* 新しい謎解き・指令ページのスタイル */
+        .quiz-item {
+            background-color: #fff;
+            padding: 1rem;
+            border-radius: 0.75rem;
+            margin-bottom: 1rem;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            text-align: left;
+            width: 100%;
+            max-width: 450px;
+        }
+        .quiz-number {
+            font-size: 1.25rem;
+            font-weight: bold;
+            color: #ff69b4; /* ホットピンク */
+            margin-right: 0.5rem;
+        }
+        .quiz-text {
+            color: #d63384; /* 濃いピンク */
+            font-size: clamp(1rem, 4vw, 1.125rem);
+            font-weight: 500;
+        }
     </style>
 </head>
 <body class="bg-[#fce4ec]">
 
 <div class="container">
-    <!-- トップページ -->
     <div id="home-page" class="page active">
         <h1 class="text-4xl font-bold text-[#d63384] mb-8">甲子園学院中学校・高等学校<br>デジタルスタンプラリー</h1>
         <p class="text-lg text-[#d63384] mb-8">校舎を周りスタンプをあつめよう！</p>
+        
         <button class="btn" onclick="showPage('qr-page')">
             <i class="fas fa-qrcode mr-2"></i> QRコード読み取り
+        </button>
+        <button class="btn" onclick="showPage('quiz-page')">
+            <i class="fas fa-search mr-2"></i> 謎解き・指令
         </button>
         <button class="btn" onclick="showPage('map-page')">
             <i class="fas fa-map-marked-alt mr-2"></i> 校舎マップ
         </button>
 
         <div id="stamp-grid-container" class="stamp-grid-container">
-            <!-- スタンプの状態を表示する部分 -->
-        </div>
+            </div>
     </div>
 
-    <!-- QRコード読み取りページ -->
+    <div id="quiz-page" class="page">
+        <h2 class="text-3xl font-bold text-[#d63384] mb-8">謎解き・指令にチャレンジ！</h2>
+        
+        <div class="quiz-item flex items-start">
+            <span class="quiz-number">1.</span>
+            <span class="quiz-text">セブンティーンアイスの自動販売機を探せ。</span>
+        </div>
+        <div class="quiz-item flex items-start">
+            <span class="quiz-number">2.</span>
+            <span class="quiz-text">ビリヤード部で実際にボールをポケットせよ。(球を穴に落とせ)</span>
+        </div>
+        <div class="quiz-item flex items-start">
+            <span class="quiz-number">3.</span>
+            <span class="quiz-text">ドジャース大谷翔平の背番号の特訓教室を探せ。</span>
+        </div>
+        <div class="quiz-item flex items-start">
+            <span class="quiz-number">4.</span>
+            <span class="quiz-text">甲子園学院中学校・高等学校のエンブレムは「松の葉」と何か。答えを視聴覚室にいる係の者に告げよ。</span>
+        </div>
+        <div class="quiz-item flex items-start">
+            <span class="quiz-number">5.</span>
+            <span class="quiz-text">AR制服試着を体験せよ。</span>
+        </div>
+
+        <button class="btn mt-8" onclick="showPage('home-page')">
+            <i class="fas fa-home mr-2"></i> トップページに戻る
+        </button>
+    </div>
+
     <div id="qr-page" class="page">
         <h2 class="text-3xl font-bold text-[#d63384] mb-4">QRコードを読み取ろう！</h2>
         <div id="reader" style="width: 100%; max-width: 400px; border-radius: 1rem;"></div>
@@ -60,7 +228,6 @@
         </button>
     </div>
 
-    <!-- 校舎マップページ -->
     <div id="map-page" class="page">
         <h2 class="text-3xl font-bold text-[#d63384] mb-4">校舎マップ</h2>
         <img id="kosya-map" src="kosya.jpg" alt="校舎マップ"> 
@@ -69,7 +236,6 @@
         </button>
     </div>
     
-    <!-- おめでとうページ -->
     <div id="congratulations-page" class="page">
         <h2 class="text-4xl font-bold text-[#d63384] mb-8 text-center">🎉おめでとうございます 🎉</h2>
         <p class="text-2xl text-[#d63384] mb-8 text-center">すべてのスタンプを<br>コンプリートしました！</p>
@@ -77,20 +243,239 @@
     </div>
 </div>
 
-<!-- メッセージボックス -->
 <div class="message-box-overlay" onclick="closeMessageBox()"></div>
 <div id="message-box" class="message-box">
     <div id="message-content"></div>
     <button class="btn mt-4" onclick="closeMessageBox()">OK</button>
 </div>
 
-<!-- html5-qrcodeライブラリ -->
 <script src="https://unpkg.com/html5-qrcode"></script>
-<!-- Font Awesome Icons -->
 <script src="https://kit.fontawesome.com/a076d05399.js" crossorigin="anonymous"></script>
-<!-- 外部JavaScriptを読み込み -->
-<script src="script.js"></script>
+
+<script>
+    // ページの状態を管理する変数
+    let html5QrcodeScanner = null;
+    let currentScannedCodes = JSON.parse(localStorage.getItem('scannedCodes')) || [];
+    let isMessageBoxVisible = false; // メッセージボックスの表示状態を管理するフラグ
+
+    // QRコードの数を定義
+    const totalQRCodes = 5;
+
+    /**
+     * 指定されたページを表示し、他のページを非表示にする関数。
+     * @param {string} pageId - 表示するページのID。
+     */
+    function showPage(pageId) {
+        document.querySelectorAll('.page').forEach(page => {
+            page.classList.remove('active');
+        });
+        document.getElementById(pageId).classList.add('active');
+
+        // QRページが表示されたらスキャナーを開始
+        if (pageId === 'qr-page') {
+            startQrScanner();
+        } else {
+            // 他のページに移動したらスキャナーを停止
+            // 2は停止状態を示す (Html5QrcodeScanner.getState() の値)
+            if (html5QrcodeScanner && html5QrcodeScanner.getState() !== 2) { 
+                html5QrcodeScanner.stop().then(() => {
+                    console.log("QR code scanner stopped.");
+                }).catch(err => {
+                    console.error("Failed to stop QR code scanner:", err);
+                });
+            }
+        }
+        updateStampGrid();
+    }
+
+    /**
+     * メッセージボックスを表示する関数。
+     * @param {string} message - 表示するメッセージ。
+     */
+    function showMessageBox(message) {
+        // メッセージボックスが表示されている場合は、新しいメッセージを表示しない
+        if (isMessageBoxVisible) {
+            return;
+        }
+        isMessageBoxVisible = true; // フラグを立てる
+
+        document.getElementById('message-content').innerHTML = message;
+        document.querySelector('.message-box-overlay').style.display = 'block';
+        document.getElementById('message-box').style.display = 'flex';
+        // メッセージボックスが表示されたらQRコードスキャナーを一時停止
+        // 1はスキャン中 (Html5QrcodeScanner.getState() の値)
+        if (html5QrcodeScanner && html5QrcodeScanner.getState() === 1) { 
+            html5QrcodeScanner.pause();
+        }
+    }
+
+    // メッセージボックスを閉じる関数
+    function closeMessageBox() {
+        isMessageBoxVisible = false; // フラグを元に戻す
+        document.querySelector('.message-box-overlay').style.display = 'none';
+        document.getElementById('message-box').style.display = 'none';
+        // メッセージボックスが閉じたらQRコードスキャナーを再開
+        // 3は一時停止中 (Html5QrcodeScanner.getState() の値)
+        if (html5QrcodeScanner && html5QrcodeScanner.getState() === 3) { 
+            html5QrcodeScanner.resume();
+        }
+    }
+
+    // スタンプの状態を更新する関数
+    function updateStampGrid() {
+        const stampGridContainer = document.querySelector('#stamp-grid-container');
+        stampGridContainer.innerHTML = '';
+        // スタンプ名に合わせて、謎解き・指令の文章を参照
+        const stamps = ['自動販売機', 'ビリヤード', '特訓教室', 'エンブレム', '制服試着']; 
+        
+        // 1行目の要素を作成
+        const firstRow = document.createElement('div');
+        firstRow.className = 'stamp-grid-row-top';
+
+        // 1番目と2番目のスタンプを追加
+        const stamp1 = createStampItem(stamps[0], 1);
+        const stamp2 = createStampItem(stamps[1], 2);
+        firstRow.appendChild(stamp1);
+        firstRow.appendChild(stamp2);
+
+        // 2行目の要素を作成
+        const secondRow = document.createElement('div');
+        secondRow.className = 'stamp-grid-row-bottom';
+        
+        // 3番目、4番目、5番目のスタンプを追加
+        const stamp3 = createStampItem(stamps[2], 3);
+        const stamp4 = createStampItem(stamps[3], 4);
+        const stamp5 = createStampItem(stamps[4], 5);
+        secondRow.appendChild(stamp3);
+        secondRow.appendChild(stamp4);
+        secondRow.appendChild(stamp5);
+
+        // コンテナに各行を追加
+        stampGridContainer.appendChild(firstRow);
+        stampGridContainer.appendChild(secondRow);
+    }
+
+    /**
+     * スタンプアイテムを生成するヘルパー関数。
+     * @param {string} stampName - スタンプの名前。
+     * @param {number} stampNumber - スタンプの番号。
+     * @returns {HTMLElement} - 生成されたスタンプのDOM要素。
+     */
+    function createStampItem(stampName, stampNumber) {
+        const isStamped = currentScannedCodes.includes(`stamp-${stampNumber}`);
+        const stampItem = document.createElement('div');
+        stampItem.className = 'stamp-item';
+        // スタンプが押されたらリボンの絵文字を表示
+        stampItem.innerHTML = `
+            <div class="stamp-status ${isStamped ? 'stamped' : ''}">
+                ${isStamped ? '🎀' : (stampNumber)}
+            </div>
+            <div class="stamp-name">${stampName}</div>
+        `;
+        return stampItem;
+    }
+
+    // QRコードスキャナーを開始する関数
+    function startQrScanner() {
+        // スキャナーが既に存在し、停止状態ではない場合は何もしない
+        if (html5QrcodeScanner) {
+             if (html5QrcodeScanner.getState() === 1 || html5QrcodeScanner.getState() === 3) {
+                 return;
+             }
+        }
+
+        // スキャナーが未作成または停止状態の場合、再初期化/開始
+        if (!html5QrcodeScanner || html5QrcodeScanner.getState() === 2) { 
+            html5QrcodeScanner = new Html5Qrcode("reader");
+            
+            // カメラが利用可能か確認し、スキャナーを開始
+            Html5Qrcode.getCameras().then(devices => {
+                if (devices && devices.length) {
+                    html5QrcodeScanner.start(
+                        { facingMode: "environment" },
+                        {
+                            fps: 10,
+                            qrbox: { width: 250, height: 250 }
+                        },
+                        onScanSuccess,
+                        onScanFailure
+                    ).catch(err => {
+                         console.error("Failed to start QR code scanner:", err);
+                         showMessageBox("QRコードスキャナーの起動に失敗しました。");
+                    });
+                } else {
+                    showMessageBox("利用可能なカメラが見つかりませんでした。");
+                }
+            }).catch(err => {
+                console.error("Camera access failed:", err);
+                showMessageBox("カメラへのアクセスに失敗しました。カメラの許可設定を確認してください。");
+            });
+            return;
+        }
+    }
+
+    /**
+     * QRコードの読み取りに成功したときの処理。
+     * @param {string} decodedText - 読み取られたQRコードのテキスト。
+     * @param {object} decodedResult - 読み取り結果の詳細情報。
+     */
+    function onScanSuccess(decodedText, decodedResult) {
+        // メッセージボックスが表示されている場合は、処理を中断（一時停止中にすることで連続スキャンを防ぐ）
+        if (isMessageBoxVisible) {
+            return;
+        }
+
+        console.log(`Code matched = ${decodedText}`, decodedResult);
+        
+        // スキャンしたコードがスタンプラリーの形式か確認
+        const regex = /^stamp-[1-5]$/;
+        if (!regex.test(decodedText)) {
+            // 形式が一致しない場合は処理しない
+            return;
+        }
+
+        // 既にスキャン済みか確認
+        if (currentScannedCodes.includes(decodedText)) {
+            showMessageBox("このスタンプは既に取得済みです！");
+            return;
+        }
+
+        // スキャンしたコードを追加して保存
+        currentScannedCodes.push(decodedText);
+        localStorage.setItem('scannedCodes', JSON.stringify(currentScannedCodes));
+
+        // スタンプの総数をチェック
+        if (currentScannedCodes.length === totalQRCodes) {
+            // すべてのスタンプを集めたらおめでとうページに移動
+            showPage('congratulations-page');
+            
+            // スキャナーが動いている場合はここで停止
+            if (html5QrcodeScanner && html5QrcodeScanner.getState() !== 2) {
+                 html5QrcodeScanner.stop().catch(err => console.error("Failed to stop scanner after completion:", err));
+            }
+
+        } else {
+            // スタンプをゲットしたことをメッセージで通知
+            const stampNumber = decodedText.split('-')[1]; // 例: "stamp-3" から 3 を取得
+            showMessageBox(`スタンプ${stampNumber}をゲットしました！\n残り${totalQRCodes - currentScannedCodes.length}個です。`);
+            // トップページに戻る
+            showPage('home-page');
+        }
+    }
+
+    /**
+     * QRコードの読み取りに失敗したときの処理。
+     * @param {string} error - 失敗した理由を示すエラーメッセージ。
+     */
+    function onScanFailure(error) {
+        // 読み取りエラーは頻繁に発生するため、ユーザーには警告を表示しない
+    }
+
+    // ページロード時にスタンプの状態を更新
+    document.addEventListener('DOMContentLoaded', () => {
+        // 初回ロード時はトップページを表示
+        showPage('home-page');
+    });
+</script>
 </body>
 </html>
-
-
