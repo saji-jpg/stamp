@@ -322,14 +322,15 @@
         document.querySelector('.message-box-overlay').style.display = 'none';
         document.getElementById('message-box').style.display = 'none';
         
-        // コンプリート済みの場合は、画面遷移やスキャナー操作を完全にスキップ
+        // 💡 修正点: コンプリート済みの場合は、画面遷移やスキャナー操作を完全にスキップ（ループ対策）
         if (isCompleted) {
              return; 
         }
         
-        // コンプリート前で、一時停止中(3)またはスキャン中(1)の状態からメッセージボックスが閉じられた場合
+        // コンプリート前の場合のロジック:
+        // スキャナーが停止状態(2)でない (一時停止中(3)またはスキャン中(1)) の場合
         if (html5QrcodeScanner && html5QrcodeScanner.getState() !== 2) {
-             // QRページにいた場合のみ、ホームへ戻してスキャナーを確実に停止させる
+             // 💡 修正点: QRコード読み取りページにいる場合、トップページへ戻る
              if (document.getElementById('qr-page').classList.contains('active')) {
                 showPage('home-page');
                 return; 
@@ -337,7 +338,7 @@
         }
     }
 
-    // スタンプの状態を更新する関数
+    // スタンプの状態を更新する関数 (変更なし)
     function updateStampGrid() {
         const stampGridContainer = document.querySelector('#stamp-grid-container');
         stampGridContainer.innerHTML = '';
@@ -432,13 +433,11 @@
         // 既にスキャン済みか確認
         if (currentScannedCodes.includes(decodedText)) {
             
-            // 💡 最終修正点: コンプリート済みの場合はメッセージボックスを完全にスキップ
+            // コンプリート済みの場合はメッセージボックスを完全にスキップ（ループ対策）
             if (isCompleted) {
-                 // スキャナーが動いていたら停止させる（念のため）
                  if (html5QrcodeScanner && html5QrcodeScanner.getState() !== 2) {
                     html5QrcodeScanner.stop().catch(err => console.error("Failed to stop scanner after re-scan on completion:", err));
                  }
-                 // メッセージ表示なしで処理終了 -> ループ解消
                  return; 
             } else {
                  // コンプリート前なら、通常通り「既に取得済み」メッセージを表示
@@ -459,9 +458,11 @@
             showPage('congratulations-page'); 
             
         } else {
-            // スタンプをゲットしたことをメッセージで通知し、ページ遷移は closeMessageBox に任せる
+            // スタンプをゲットしたことをメッセージで通知し、**メッセージを閉じた後にトップページに戻る**
             const stampNumber = decodedText.split('-')[1]; 
             showMessageBox(`スタンプ${stampNumber}をゲットしました！\n残り${totalQRCodes - currentScannedCodes.length}個です。`);
+            
+            // 💡 修正点: メッセージボックスが表示され、closeMessageBoxが呼ばれるのを待ってホームへ戻る
         }
     }
 
