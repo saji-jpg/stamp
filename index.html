@@ -121,6 +121,7 @@
             color: #d63384;
             font-weight: 500;
         }
+        /* メッセージボックスのスタイルは残しますが、コードから呼び出しません */
         .message-box {
             position: fixed;
             top: 50%;
@@ -246,10 +247,10 @@
     </div>
 </div>
 
-<div class="message-box-overlay" onclick="closeMessageBox()"></div>
+<div class="message-box-overlay"></div>
 <div id="message-box" class="message-box">
     <div id="message-content"></div>
-    <button class="btn mt-4" onclick="closeMessageBox()">OK</button>
+    <button class="btn mt-4">OK</button>
 </div>
 
 <script src="https://unpkg.com/html5-qrcode"></script>
@@ -259,7 +260,6 @@
     // ページの状態を管理する変数
     let html5QrcodeScanner = null;
     let currentScannedCodes = JSON.parse(localStorage.getItem('scannedCodes')) || [];
-    let isMessageBoxVisible = false; // メッセージボックスの表示状態を管理するフラグ
     const totalQRCodes = 5;
 
     // コンプリート状態を追跡するグローバルフラグ
@@ -282,6 +282,7 @@
             }
         } else {
             // 他のページに移動したらスキャナーを停止
+            // stop()は非同期で、スキャナーが起動中であれば停止させる
             if (html5QrcodeScanner && html5QrcodeScanner.getState() !== 2) { 
                 html5QrcodeScanner.stop().then(() => {
                     console.log("QR code scanner stopped.");
@@ -292,51 +293,8 @@
         }
         updateStampGrid();
     }
-
-    /**
-     * メッセージボックスを表示する関数。（コンプリート前のみ使用）
-     */
-    function showMessageBox(message) {
-        // コンプリート後はメッセージを表示しない
-        if (isCompleted) {
-            return;
-        }
-
-        if (isMessageBoxVisible) {
-            return;
-        }
-        isMessageBoxVisible = true;
-
-        document.getElementById('message-content').innerHTML = message;
-        document.querySelector('.message-box-overlay').style.display = 'block';
-        document.getElementById('message-box').style.display = 'flex';
-        // メッセージボックスが表示されたらQRコードスキャナーを一時停止
-        if (html5QrcodeScanner && html5QrcodeScanner.getState() === 1) { 
-            html5QrcodeScanner.pause();
-        }
-    }
-
-    // メッセージボックスを閉じる関数（コンプリート前のみ機能）
-    function closeMessageBox() {
-        isMessageBoxVisible = false;
-        document.querySelector('.message-box-overlay').style.display = 'none';
-        document.getElementById('message-box').style.display = 'none';
-        
-        // 💡 修正点: コンプリート済みの場合は、画面遷移やスキャナー操作を完全にスキップ（ループ対策）
-        if (isCompleted) {
-             return; 
-        }
-        
-        // コンプリート前の場合のロジック:
-        // スキャナーが停止状態(2)でない (一時停止中(3)またはスキャン中(1)) の場合
-        if (html5QrcodeScanner && html5QrcodeScanner.getState() !== 2) {
-             // 💡 修正点: QRコード読み取りページにいる場合、トップページへ戻る
-             if (document.getElementById('qr-page').classList.contains('active')) {
-                showPage('home-page');
-                return; 
-             }
-        }
-    }
+    
+    // 📢 メッセージボックス関連の関数は削除/無効化しました
 
     // スタンプの状態を更新する関数 (変更なし)
     function updateStampGrid() {
@@ -383,6 +341,7 @@
             return;
         }
 
+        // スキャナーが動いていれば何もしない
         if (html5QrcodeScanner) {
              if (html5QrcodeScanner.getState() === 1 || html5QrcodeScanner.getState() === 3) {
                  return;
@@ -404,14 +363,13 @@
                         onScanFailure
                     ).catch(err => {
                         console.error("Failed to start QR code scanner:", err);
-                        showMessageBox("QRコードスキャナーの起動に失敗しました。");
+                        // メッセージボックスは表示せず、エラーをコンソールに出力
                     });
                 } else {
-                    showMessageBox("利用可能なカメラが見つかりませんでした。");
+                    console.error("利用可能なカメラが見つかりませんでした。");
                 }
             }).catch(err => {
                 console.error("Camera access failed:", err);
-                showMessageBox("カメラへのアクセスに失敗しました。カメラの許可設定を確認してください。");
             });
             return;
         }
@@ -421,32 +379,25 @@
      * QRコードの読み取りに成功したときの処理。
      */
     function onScanSuccess(decodedText, decodedResult) {
-        if (isMessageBoxVisible) {
-            return;
-        }
+        // メッセージボックスがないため、isMessageBoxVisible のチェックは不要
 
         const regex = /^stamp-[1-5]$/;
         if (!regex.test(decodedText)) {
             return;
         }
 
-        // 既にスキャン済みか確認
+        // --- 既取得スタンプ、またはコンプリート後の処理 ---
         if (currentScannedCodes.includes(decodedText)) {
-            
-            // コンプリート済みの場合はメッセージボックスを完全にスキップ（ループ対策）
-            if (isCompleted) {
-                 if (html5QrcodeScanner && html5QrcodeScanner.getState() !== 2) {
-                    html5QrcodeScanner.stop().catch(err => console.error("Failed to stop scanner after re-scan on completion:", err));
-                 }
-                 return; 
-            } else {
-                 // コンプリート前なら、通常通り「既に取得済み」メッセージを表示
-                 showMessageBox("このスタンプは既に取得済みです！"); 
-            }
-            return;
+             // 既取得スタンプをスキャンした場合 (コンプリート前・後に関わらず)
+             // 何もしない（静かに無視する）
+             return;
         }
 
-        // --- スタンプゲット成功時の処理 ---
+        // --- 新しいスタンプゲット成功時の処理 ---
+        
+        // QRコードのスキャンが成功した時点で、スキャナーを停止し、トップページに戻る
+        // これにより、読み取り成功 = ホーム画面遷移 となり、ループを完全に防ぎます。
+        
         currentScannedCodes.push(decodedText);
         localStorage.setItem('scannedCodes', JSON.stringify(currentScannedCodes));
 
@@ -454,15 +405,17 @@
         if (currentScannedCodes.length === totalQRCodes) {
             // コンプリートフラグを立てる
             isCompleted = true;
-            // すべてのスタンプを集めたらおめでとうページに移動（showPage内でスキャナーは自動停止）
+            // すべてのスタンプを集めたらおめでとうページに移動
             showPage('congratulations-page'); 
             
         } else {
-            // スタンプをゲットしたことをメッセージで通知し、**メッセージを閉じた後にトップページに戻る**
-            const stampNumber = decodedText.split('-')[1]; 
-            showMessageBox(`スタンプ${stampNumber}をゲットしました！\n残り${totalQRCodes - currentScannedCodes.length}個です。`);
+            // スタンプをゲットしたことを表示せずに、即座にトップページに戻る
+            // showPageが呼ばれると、QRページから離れるため、スキャナーは自動的に停止します
+            showPage('home-page');
             
-            // 💡 修正点: メッセージボックスが表示され、closeMessageBoxが呼ばれるのを待ってホームへ戻る
+            // 💡 ユーザーへのフィードバック:
+            // メッセージボックスがないため、スタンプが追加されたことを確認するには
+            // トップページに戻った後、スタンプのアイコンが変わっているのを確認します。
         }
     }
 
