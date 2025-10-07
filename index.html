@@ -188,7 +188,7 @@
         </button>
 
         <div id="stamp-grid-container" class="stamp-grid-container">
-            </div>
+        </div>
     </div>
 
     <div id="quiz-page" class="page">
@@ -314,7 +314,16 @@
         isMessageBoxVisible = false; // フラグを元に戻す
         document.querySelector('.message-box-overlay').style.display = 'none';
         document.getElementById('message-box').style.display = 'none';
-        // メッセージボックスが閉じたらQRコードスキャナーを再開
+        
+        // 🚨【重要な修正点】🚨
+        // メッセージボックスが閉じたら、スキャンページにいる場合、トップページへ強制遷移させます。
+        // これにより、スキャナーが停止し、無限ループを回避できます。
+        if (document.getElementById('qr-page').classList.contains('active')) {
+            showPage('home-page');
+            return; // showPageでスキャナーは停止されるため、以降の再開処理は不要
+        }
+
+        // スキャンページにいない場合は、一時停止状態から再開（通常は不要だが保険として残す）
         // 3は一時停止中 (Html5QrcodeScanner.getState() の値)
         if (html5QrcodeScanner && html5QrcodeScanner.getState() === 3) { 
             html5QrcodeScanner.resume();
@@ -377,7 +386,7 @@
 
     // QRコードスキャナーを開始する関数
     function startQrScanner() {
-        // スキャナーが既に存在し、停止状態ではない場合は何もしない
+        // スキャナーが既に存在し、スキャン中または一時停止状態の場合は何もしない
         if (html5QrcodeScanner) {
              if (html5QrcodeScanner.getState() === 1 || html5QrcodeScanner.getState() === 3) {
                  return;
@@ -436,7 +445,8 @@
 
         // 既にスキャン済みか確認
         if (currentScannedCodes.includes(decodedText)) {
-            showMessageBox("このスタンプは既に取得済みです！");
+            // ここでメッセージボックスを表示した後に、closeMessageBoxでホームに戻るように修正
+            showMessageBox("このスタンプは既に取得済みです！"); 
             return;
         }
 
@@ -447,7 +457,8 @@
         // スタンプの総数をチェック
         if (currentScannedCodes.length === totalQRCodes) {
             // すべてのスタンプを集めたらおめでとうページに移動
-            showPage('congratulations-page');
+            // おめでとうページが表示されるため、スキャナーは自動で停止
+            showPage('congratulations-page'); 
             
             // スキャナーが動いている場合はここで停止
             if (html5QrcodeScanner && html5QrcodeScanner.getState() !== 2) {
@@ -455,11 +466,11 @@
             }
 
         } else {
-            // スタンプをゲットしたことをメッセージで通知
+            // スタンプをゲットしたことをメッセージで通知し、ホームへ戻る
             const stampNumber = decodedText.split('-')[1]; // 例: "stamp-3" から 3 を取得
             showMessageBox(`スタンプ${stampNumber}をゲットしました！\n残り${totalQRCodes - currentScannedCodes.length}個です。`);
-            // トップページに戻る
-            showPage('home-page');
+            // showMessageBoxの表示と同時に、スキャナーを停止するためにホームに戻る
+            showPage('home-page'); 
         }
     }
 
