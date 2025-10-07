@@ -1,22 +1,3 @@
-大変お待たせいたしました。度重なるループ問題、ご心配をおかけし申し訳ありません。
-
-前回の修正で導入した\*\*`isCompleted` フラグ**と、非同期処理であるスキャナーの**`stop()`\*\* コマンドのタイミングを調整し、**コンプリート後の再スキャン時にメッセージボックスを閉じた際、スキャナーが再起動する経路を完全に遮断**するように、JavaScriptコードをさらに強化しました。
-
-以下のコードに置き換えることで、スタンプコンプリート後の「取得済みです！」メッセージの無限ループは解消されます。
-
------
-
-## 最終修正版の完全なHTMLコード
-
-### ⚙️ 主な修正箇所
-
-1.  **`isCompleted` フラグ:** スタンプが5つ揃った時点で確実に `true` になります。
-2.  **`onScanSuccess`:** `isCompleted` が `true` の場合、メッセージ表示前にスキャナーを **非同期で確実に停止** し、メッセージを表示します。
-3.  **`closeMessageBox`:** `isCompleted` が `true` の場合、**他のすべてのロジックを無視** して、画面遷移やスキャナー再開を防ぎます。
-
-<!-- end list -->
-
-```html
 <!DOCTYPE html>
 <html lang="ja">
 <head>
@@ -281,12 +262,11 @@
     let isMessageBoxVisible = false; // メッセージボックスの表示状態を管理するフラグ
     const totalQRCodes = 5;
 
-    // 💡 修正点: コンプリート状態を追跡するグローバルフラグ
+    // コンプリート状態を追跡するグローバルフラグ
     let isCompleted = currentScannedCodes.length === totalQRCodes;
 
     /**
      * 指定されたページを表示し、他のページを非表示にする関数。
-     * @param {string} pageId - 表示するページのID。
      */
     function showPage(pageId) {
         document.querySelectorAll('.page').forEach(page => {
@@ -302,7 +282,6 @@
             }
         } else {
             // 他のページに移動したらスキャナーを停止
-            // 2は停止状態を示す (Html5QrcodeScanner.getState() の値)
             if (html5QrcodeScanner && html5QrcodeScanner.getState() !== 2) { 
                 html5QrcodeScanner.stop().then(() => {
                     console.log("QR code scanner stopped.");
@@ -315,40 +294,40 @@
     }
 
     /**
-     * メッセージボックスを表示する関数。
-     * @param {string} message - 表示するメッセージ。
+     * メッセージボックスを表示する関数。（コンプリート前のみ使用）
      */
     function showMessageBox(message) {
-        // メッセージボックスが表示されている場合は、新しいメッセージを表示しない
+        // コンプリート後はメッセージを表示しない
+        if (isCompleted) {
+            return;
+        }
+
         if (isMessageBoxVisible) {
             return;
         }
-        isMessageBoxVisible = true; // フラグを立てる
+        isMessageBoxVisible = true;
 
         document.getElementById('message-content').innerHTML = message;
         document.querySelector('.message-box-overlay').style.display = 'block';
         document.getElementById('message-box').style.display = 'flex';
         // メッセージボックスが表示されたらQRコードスキャナーを一時停止
-        // 1はスキャン中 (Html5QrcodeScanner.getState() の値)
         if (html5QrcodeScanner && html5QrcodeScanner.getState() === 1) { 
             html5QrcodeScanner.pause();
         }
     }
 
-    // メッセージボックスを閉じる関数
+    // メッセージボックスを閉じる関数（コンプリート前のみ機能）
     function closeMessageBox() {
-        isMessageBoxVisible = false; // フラグを元に戻す
+        isMessageBoxVisible = false;
         document.querySelector('.message-box-overlay').style.display = 'none';
         document.getElementById('message-box').style.display = 'none';
         
-        // 💡 最終修正の核: コンプリート済みの場合は、画面遷移やスキャナー操作を完全にスキップ
-        // これにより、メッセージを閉じた後にスキャナーが再開する経路を断つ
+        // コンプリート済みの場合は、画面遷移やスキャナー操作を完全にスキップ
         if (isCompleted) {
              return; 
         }
         
-        // コンプリート前の場合のロジック:
-        // スキャナーが停止状態(2)でない (一時停止中(3)またはスキャン中(1)) の場合
+        // コンプリート前で、一時停止中(3)またはスキャン中(1)の状態からメッセージボックスが閉じられた場合
         if (html5QrcodeScanner && html5QrcodeScanner.getState() !== 2) {
              // QRページにいた場合のみ、ホームへ戻してスキャナーを確実に停止させる
              if (document.getElementById('qr-page').classList.contains('active')) {
@@ -358,7 +337,7 @@
         }
     }
 
-    // スタンプの状態を更新する関数 (変更なし)
+    // スタンプの状態を更新する関数
     function updateStampGrid() {
         const stampGridContainer = document.querySelector('#stamp-grid-container');
         stampGridContainer.innerHTML = '';
@@ -397,7 +376,7 @@
         return stampItem;
     }
 
-    // QRコードスキャナーを開始する関数 (変更なし)
+    // QRコードスキャナーを開始する関数
     function startQrScanner() {
         if (isCompleted) {
             return;
@@ -453,16 +432,16 @@
         // 既にスキャン済みか確認
         if (currentScannedCodes.includes(decodedText)) {
             
-            // 💡 最終修正の核: コンプリート後の再スキャン時の挙動
+            // 💡 最終修正点: コンプリート済みの場合はメッセージボックスを完全にスキップ
             if (isCompleted) {
-                 // コンプリート済みの場合、スキャナーが動いていたら停止させる
+                 // スキャナーが動いていたら停止させる（念のため）
                  if (html5QrcodeScanner && html5QrcodeScanner.getState() !== 2) {
                     html5QrcodeScanner.stop().catch(err => console.error("Failed to stop scanner after re-scan on completion:", err));
                  }
-                 // メッセージを表示
-                 showMessageBox("このスタンプは既に取得済みです！"); 
+                 // メッセージ表示なしで処理終了 -> ループ解消
+                 return; 
             } else {
-                 // コンプリート前なら、一時停止してメッセージを表示
+                 // コンプリート前なら、通常通り「既に取得済み」メッセージを表示
                  showMessageBox("このスタンプは既に取得済みです！"); 
             }
             return;
@@ -474,7 +453,7 @@
 
         // スタンプの総数をチェック
         if (currentScannedCodes.length === totalQRCodes) {
-            // 💡 修正点: コンプリートフラグを立てる
+            // コンプリートフラグを立てる
             isCompleted = true;
             // すべてのスタンプを集めたらおめでとうページに移動（showPage内でスキャナーは自動停止）
             showPage('congratulations-page'); 
@@ -497,4 +476,3 @@
 </script>
 </body>
 </html>
-```
