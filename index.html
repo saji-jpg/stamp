@@ -196,23 +196,23 @@
         
         <div class="quiz-item flex items-start">
             <span class="quiz-number">1.</span>
-            <span class="quiz-text">セブンティーンアイスの自動販売機を探すべし。</span>
+            <span class="quiz-text">セブンティーンアイスの自動販売機を探せ。</span>
         </div>
         <div class="quiz-item flex items-start">
             <span class="quiz-number">2.</span>
-            <span class="quiz-text">ビリヤード部で実際にボールをポケット(球を穴に落とすこと)するべし。</span>
+            <span class="quiz-text">ビリヤード部で実際にボールをポケットせよ。(球を穴に落とせ)</span>
         </div>
         <div class="quiz-item flex items-start">
             <span class="quiz-number">3.</span>
-            <span class="quiz-text">ドジャース大谷翔平の背番号の特訓教室を探すべし。</span>
+            <span class="quiz-text">ドジャース大谷翔平の背番号の特訓教室を探せ。</span>
         </div>
         <div class="quiz-item flex items-start">
             <span class="quiz-number">4.</span>
-            <span class="quiz-text">甲子園学院中学校・高等学校の校訓である「黽勉〇〇」。〇〇に入る言葉を視聴覚室にいる係の者に告げるべし。</span>
+            <span class="quiz-text">甲子園学院中学校・高等学校のエンブレムは「松の葉」と何か。答えを視聴覚室にいる係の者に告げよ。</span>
         </div>
         <div class="quiz-item flex items-start">
             <span class="quiz-number">5.</span>
-            <span class="quiz-text">AR制服試着を体験するべし。</span>
+            <span class="quiz-text">AR制服試着を体験せよ。</span>
         </div>
 
         <button class="btn mt-8" onclick="showPage('home-page')">
@@ -315,19 +315,17 @@
         document.querySelector('.message-box-overlay').style.display = 'none';
         document.getElementById('message-box').style.display = 'none';
         
-        // 🚨【重要な修正点】🚨
-        // メッセージボックスが閉じたら、スキャンページにいる場合、トップページへ強制遷移させます。
-        // これにより、スキャナーが停止し、無限ループを回避できます。
-        if (document.getElementById('qr-page').classList.contains('active')) {
+        // 🚨【最終修正点】🚨
+        // メッセージボックスを閉じる際に、スキャナーが停止状態(2)でなければ
+        // 必ずトップページに戻り、スキャナーを停止させる。
+        // これにより、「既に取得済み」または「スタンプ獲得」のいずれのケースでも、
+        // メッセージ表示後にスキャナーが再開して無限ループするのを防ぎます。
+        if (html5QrcodeScanner && html5QrcodeScanner.getState() !== 2) {
             showPage('home-page');
-            return; // showPageでスキャナーは停止されるため、以降の再開処理は不要
+            return; 
         }
 
-        // スキャンページにいない場合は、一時停止状態から再開（通常は不要だが保険として残す）
-        // 3は一時停止中 (Html5QrcodeScanner.getState() の値)
-        if (html5QrcodeScanner && html5QrcodeScanner.getState() === 3) { 
-            html5QrcodeScanner.resume();
-        }
+        // スキャナーが元々停止しているか、QRページにいない場合は何もしない
     }
 
     // スタンプの状態を更新する関数
@@ -335,7 +333,7 @@
         const stampGridContainer = document.querySelector('#stamp-grid-container');
         stampGridContainer.innerHTML = '';
         // スタンプ名に合わせて、謎解き・指令の文章を参照
-        const stamps = ['自動販売機', 'ビリヤード', '特訓教室', '校訓', '制服試着']; 
+        const stamps = ['自動販売機', 'ビリヤード', '特訓教室', 'エンブレム', '制服試着']; 
         
         // 1行目の要素を作成
         const firstRow = document.createElement('div');
@@ -429,7 +427,7 @@
      * @param {object} decodedResult - 読み取り結果の詳細情報。
      */
     function onScanSuccess(decodedText, decodedResult) {
-        // メッセージボックスが表示されている場合は、処理を中断（一時停止中にすることで連続スキャンを防ぐ）
+        // メッセージボックスが表示されている場合は、処理を中断
         if (isMessageBoxVisible) {
             return;
         }
@@ -445,7 +443,7 @@
 
         // 既にスキャン済みか確認
         if (currentScannedCodes.includes(decodedText)) {
-            // ここでメッセージボックスを表示した後に、closeMessageBoxでホームに戻るように修正
+            // ここでメッセージボックスを表示したら、スキャナーが一時停止される
             showMessageBox("このスタンプは既に取得済みです！"); 
             return;
         }
@@ -456,21 +454,19 @@
 
         // スタンプの総数をチェック
         if (currentScannedCodes.length === totalQRCodes) {
-            // すべてのスタンプを集めたらおめでとうページに移動
-            // おめでとうページが表示されるため、スキャナーは自動で停止
+            // すべてのスタンプを集めたらおめでとうページに移動（スキャナーは自動停止）
             showPage('congratulations-page'); 
             
-            // スキャナーが動いている場合はここで停止
             if (html5QrcodeScanner && html5QrcodeScanner.getState() !== 2) {
                  html5QrcodeScanner.stop().catch(err => console.error("Failed to stop scanner after completion:", err));
             }
 
         } else {
-            // スタンプをゲットしたことをメッセージで通知し、ホームへ戻る
-            const stampNumber = decodedText.split('-')[1]; // 例: "stamp-3" から 3 を取得
+            // スタンプをゲットしたことをメッセージで通知し、ページ遷移は closeMessageBox に任せる
+            const stampNumber = decodedText.split('-')[1]; 
             showMessageBox(`スタンプ${stampNumber}をゲットしました！\n残り${totalQRCodes - currentScannedCodes.length}個です。`);
-            // showMessageBoxの表示と同時に、スキャナーを停止するためにホームに戻る
-            showPage('home-page'); 
+            
+            // showMessageBox 内で一時停止されているため、ここでは何もしない
         }
     }
 
@@ -490,4 +486,3 @@
 </script>
 </body>
 </html>
-
