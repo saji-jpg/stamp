@@ -318,17 +318,17 @@
         document.querySelector('.message-box-overlay').style.display = 'none';
         document.getElementById('message-box').style.display = 'none';
         
-        // 🎯 修正点 3: closeMessageBoxのロジックを変更
-        // メッセージボックスを閉じる際、スキャナーが停止状態(2)でない 且つ QRページにいた場合、
-        // 必ずトップページに戻り、スキャナーを停止させる。
+        // 修正後のロジック:
+        // スキャナーの状態が停止状態(2)でない場合、かつQRページが表示されている場合に、
+        // トップページに戻り、スキャナーを停止させる。
+        // コンプリート後は onScanSuccess でスキャナーが停止状態(2)になるため、この処理はスキップされ、
+        // 画面遷移は発生しない。
         if (html5QrcodeScanner && html5QrcodeScanner.getState() !== 2) {
-             // スキャナーが一時停止(3)の場合、showPage('home-page')が呼び出され、
-             // 内部でスキャナーが停止状態(2)になるため、無限ループを防げる。
-             showPage('home-page');
-             return; 
+             if (document.getElementById('qr-page').classList.contains('active')) {
+                showPage('home-page');
+                return; 
+             }
         }
-
-        // スキャナーが元々停止しているか、QRページにいない場合は何もしない
     }
 
     // スタンプの状態を更新する関数
@@ -447,18 +447,18 @@
         // 既にスキャン済みか確認
         if (currentScannedCodes.includes(decodedText)) {
             
-            // 🎯 修正点 2: コンプリート後の再スキャン時の処理
-            // すでにコンプリート済みの場合（5個のスタンプがある場合）、
-            // 「既に取得済み」メッセージを表示する前にスキャナーを停止し、
-            // メッセージボックスを閉じても再スキャンされないようにする。
+            // 修正されたロジック: コンプリート後の再スキャン時の挙動
             if (currentScannedCodes.length === totalQRCodes) {
+                 // コンプリート済みで、かつ「既に取得済み」のコードをスキャンした場合
                  if (html5QrcodeScanner && html5QrcodeScanner.getState() !== 2) {
+                    // スキャナーを完全に停止
                     html5QrcodeScanner.stop().catch(err => console.error("Failed to stop scanner after re-scan on completion:", err));
                  }
-                 // 停止後にメッセージを表示（showMessageBox内で再一時停止されない）
+                 // メッセージを表示。closeMessageBoxではスキャナーが停止状態のため、画面遷移は起きない。
                  showMessageBox("このスタンプは既に取得済みです！"); 
             } else {
-                 // コンプリート前なら、一時停止してメッセージを表示
+                 // コンプリート前で、「既に取得済み」のコードをスキャンした場合
+                 // showMessageBoxで一時停止させ、closeMessageBoxでトップページに戻る
                  showMessageBox("このスタンプは既に取得済みです！"); 
             }
             return;
