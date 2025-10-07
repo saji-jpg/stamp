@@ -121,7 +121,7 @@
             color: #d63384;
             font-weight: 500;
         }
-        /* メッセージボックスのスタイルは残しますが、コードから呼び出しません */
+        /* メッセージボックスのスタイル */
         .message-box {
             position: fixed;
             top: 50%;
@@ -136,6 +136,7 @@
             flex-direction: column;
             align-items: center;
             text-align: center;
+            animation: bounceIn 0.3s ease-out; /* アニメーション追加 */
         }
         .message-box-overlay {
             position: fixed;
@@ -146,6 +147,11 @@
             background-color: rgba(0, 0, 0, 0.5);
             z-index: 99;
             display: none;
+        }
+        @keyframes bounceIn {
+            0% { transform: translate(-50%, -50%) scale(0.8); opacity: 0; }
+            70% { transform: translate(-50%, -50%) scale(1.05); opacity: 1; }
+            100% { transform: translate(-50%, -50%) scale(1); }
         }
         /* 新しい謎解き・指令ページのスタイル */
         .quiz-item {
@@ -249,9 +255,8 @@
 
 <div class="message-box-overlay"></div>
 <div id="message-box" class="message-box">
-    <div id="message-content"></div>
-    <button class="btn mt-4">OK</button>
-</div>
+    <div id="message-content" class="text-xl font-bold text-[#d63384]"></div>
+    </div>
 
 <script src="https://unpkg.com/html5-qrcode"></script>
 <script src="https://kit.fontawesome.com/a076d05399.js" crossorigin="anonymous"></script>
@@ -260,10 +265,13 @@
     // ページの状態を管理する変数
     let html5QrcodeScanner = null;
     let currentScannedCodes = JSON.parse(localStorage.getItem('scannedCodes')) || [];
+    let isMessageBoxVisible = false; // メッセージボックスの表示状態を管理するフラグ
     const totalQRCodes = 5;
 
     // コンプリート状態を追跡するグローバルフラグ
     let isCompleted = currentScannedCodes.length === totalQRCodes;
+    
+    let autoCloseTimer = null; // 自動クローズのタイマーID
 
     /**
      * 指定されたページを表示し、他のページを非表示にする関数。
@@ -276,13 +284,11 @@
 
         // QRページが表示されたらスキャナーを開始
         if (pageId === 'qr-page') {
-            // コンプリート済みの場合はスキャナーを起動しない
             if (!isCompleted) {
                 startQrScanner();
             }
         } else {
             // 他のページに移動したらスキャナーを停止
-            // stop()は非同期で、スキャナーが起動中であれば停止させる
             if (html5QrcodeScanner && html5QrcodeScanner.getState() !== 2) { 
                 html5QrcodeScanner.stop().then(() => {
                     console.log("QR code scanner stopped.");
@@ -293,8 +299,54 @@
         }
         updateStampGrid();
     }
+
+    /**
+     * メッセージボックスを2秒間表示し、自動でトップページへ戻るようにする関数。
+     */
+    function showAnimatedMessageBox(message) {
+        // コンプリート後はメッセージを表示しない
+        if (isCompleted) {
+            return;
+        }
+        if (isMessageBoxVisible) {
+            return;
+        }
+        isMessageBoxVisible = true;
+        
+        // 既存のタイマーをクリア
+        if (autoCloseTimer) {
+            clearTimeout(autoCloseTimer);
+        }
+
+        document.getElementById('message-content').innerHTML = `🎉 ${message} 🎉`;
+        document.querySelector('.message-box-overlay').style.display = 'block';
+        document.getElementById('message-box').style.display = 'flex';
+        
+        // 2秒後にメッセージを閉じてトップページに戻る
+        autoCloseTimer = setTimeout(() => {
+            closeMessageBoxAndGoHome();
+        }, 2000); // 2000ミリ秒 = 2秒
+    }
     
-    // 📢 メッセージボックス関連の関数は削除/無効化しました
+    /**
+     * メッセージボックスを閉じてトップページへ遷移する処理。
+     */
+    function closeMessageBoxAndGoHome() {
+        isMessageBoxVisible = false;
+        document.querySelector('.message-box-overlay').style.display = 'none';
+        document.getElementById('message-box').style.display = 'none';
+        
+        // タイマーIDをクリア
+        if (autoCloseTimer) {
+            clearTimeout(autoCloseTimer);
+            autoCloseTimer = null;
+        }
+        
+        // QRページにいた場合のみ、トップページへ戻る
+        if (document.getElementById('qr-page').classList.contains('active')) {
+            showPage('home-page');
+        }
+    }
 
     // スタンプの状態を更新する関数 (変更なし)
     function updateStampGrid() {
@@ -335,13 +387,12 @@
         return stampItem;
     }
 
-    // QRコードスキャナーを開始する関数
+    // QRコードスキャナーを開始する関数 (変更なし)
     function startQrScanner() {
         if (isCompleted) {
             return;
         }
 
-        // スキャナーが動いていれば何もしない
         if (html5QrcodeScanner) {
              if (html5QrcodeScanner.getState() === 1 || html5QrcodeScanner.getState() === 3) {
                  return;
@@ -363,7 +414,6 @@
                         onScanFailure
                     ).catch(err => {
                         console.error("Failed to start QR code scanner:", err);
-                        // メッセージボックスは表示せず、エラーをコンソールに出力
                     });
                 } else {
                     console.error("利用可能なカメラが見つかりませんでした。");
@@ -379,7 +429,10 @@
      * QRコードの読み取りに成功したときの処理。
      */
     function onScanSuccess(decodedText, decodedResult) {
-        // メッセージボックスがないため、isMessageBoxVisible のチェックは不要
+        // メッセージボックスが表示中の場合は、新しいスキャンを無視（ループ対策）
+        if (isMessageBoxVisible) {
+            return;
+        }
 
         const regex = /^stamp-[1-5]$/;
         if (!regex.test(decodedText)) {
@@ -389,33 +442,35 @@
         // --- 既取得スタンプ、またはコンプリート後の処理 ---
         if (currentScannedCodes.includes(decodedText)) {
              // 既取得スタンプをスキャンした場合 (コンプリート前・後に関わらず)
-             // 何もしない（静かに無視する）
+             // スキャナーを停止（念のため）し、何も表示せずに終了
+             if (html5QrcodeScanner && html5QrcodeScanner.getState() !== 2) {
+                html5QrcodeScanner.stop().catch(err => console.error("Failed to stop scanner after re-scan on completion:", err));
+             }
              return;
         }
 
         // --- 新しいスタンプゲット成功時の処理 ---
         
-        // QRコードのスキャンが成功した時点で、スキャナーを停止し、トップページに戻る
-        // これにより、読み取り成功 = ホーム画面遷移 となり、ループを完全に防ぎます。
-        
+        // 1. スキャナーを即座に停止 (showAnimatedMessageBox の前に実行することで、アニメーション中に再スキャンされるのを防ぐ)
+        if (html5QrcodeScanner && html5QrcodeScanner.getState() !== 2) {
+            html5QrcodeScanner.stop().catch(err => console.error("Failed to stop scanner before animation:", err));
+        }
+
+        // 2. スタンプの状態を更新
         currentScannedCodes.push(decodedText);
         localStorage.setItem('scannedCodes', JSON.stringify(currentScannedCodes));
+        
+        const stampNumber = decodedText.split('-')[1]; 
 
-        // スタンプの総数をチェック
+        // 3. コンプリートチェック
         if (currentScannedCodes.length === totalQRCodes) {
-            // コンプリートフラグを立てる
             isCompleted = true;
-            // すべてのスタンプを集めたらおめでとうページに移動
+            // コンプリート時はそのままおめでとうページへ遷移
             showPage('congratulations-page'); 
             
         } else {
-            // スタンプをゲットしたことを表示せずに、即座にトップページに戻る
-            // showPageが呼ばれると、QRページから離れるため、スキャナーは自動的に停止します
-            showPage('home-page');
-            
-            // 💡 ユーザーへのフィードバック:
-            // メッセージボックスがないため、スタンプが追加されたことを確認するには
-            // トップページに戻った後、スタンプのアイコンが変わっているのを確認します。
+            // コンプリート前は、2秒アニメーションを表示し、自動でホームに戻る
+            showAnimatedMessageBox(`スタンプ${stampNumber}をゲットしました！`);
         }
     }
 
