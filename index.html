@@ -6,6 +6,7 @@
     <title>デジタルスタンプラリー</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&display=swap">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
     
     <style>
         /* Clampを使用して、フォントサイズを画面幅に応じて調整します */
@@ -259,8 +260,7 @@
 </div>
 
 <script src="https://unpkg.com/html5-qrcode"></script>
-<script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script> <script src="https://kit.fontawesome.com/a076d05399.js" crossorigin="anonymous"></script>
-
+<script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script> 
 <script>
     // ページの状態を管理する変数
     let html5QrcodeScanner = null;
@@ -355,7 +355,7 @@
         }
     }
 
-    // スタンプの状態を更新する関数 (変更なし)
+    // スタンプの状態を更新する関数
     function updateStampGrid() {
         const stampGridContainer = document.querySelector('#stamp-grid-container');
         stampGridContainer.innerHTML = '';
@@ -394,7 +394,7 @@
         return stampItem;
     }
 
-    // QRコードスキャナーを開始する関数 (変更なし)
+    // QRコードスキャナーを開始する関数
     function startQrScanner() {
         if (isCompleted) {
             return;
@@ -458,7 +458,7 @@
 
         // --- 新しいスタンプゲット成功時の処理 ---
         
-        // 1. スキャナーを即座に停止 (showAnimatedMessageBox の前に実行することで、アニメーション中に再スキャンされるのを防ぐ)
+        // 1. スキャナーを即座に停止 (アニメーション中に再スキャンされるのを防ぐ)
         if (html5QrcodeScanner && html5QrcodeScanner.getState() !== 2) {
             html5QrcodeScanner.stop().catch(err => console.error("Failed to stop scanner before animation:", err));
         }
@@ -472,6 +472,14 @@
         // 3. コンプリートチェック
         if (currentScannedCodes.length === totalQRCodes) {
             isCompleted = true;
+            
+            // 🎉 コンプリート時の豪華なコンフェッティアニメーション
+            confetti({
+                particleCount: 200, // 紙吹雪の数を増やす
+                spread: 120,       // 広がる角度を広くする
+                origin: { y: 0.4, x: 0.5 } // 画面中央上部から散らす
+            });
+
             // コンプリート時はそのままおめでとうページへ遷移
             showPage('congratulations-page'); 
             
@@ -487,6 +495,13 @@
 
     // ページロード時にスタンプの状態を更新
     document.addEventListener('DOMContentLoaded', () => {
+        // Font Awesome 5のCDNを読み込んでいないため、手動で読み込む処理を削除し、
+        // 以下のコードで対応する（HTMLの<script>タグで5.15.4を読み込んでいるため、本来は不要）
+        // const script = document.createElement('script');
+        // script.src = "https://kit.fontawesome.com/a076d05399.js";
+        // script.crossOrigin = "anonymous";
+        // document.head.appendChild(script);
+
         showPage('home-page');
     });
 </script>
